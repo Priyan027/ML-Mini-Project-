@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Titanic Survival Predictor</title>
+  <style>
+    :root { color-scheme: light; --navy:#14213d; --blue:#2563eb; --bg:#f4f7fb; --muted:#64748b; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg); color:#172033; }
+    header { background:var(--navy); color:white; padding:30px 18px; }
+    .wrap { width:min(1100px, 94%); margin:auto; }
+    h1 { margin:0 0 8px; font-size:clamp(26px,4vw,36px); }
+    header p { margin:0; color:#dbeafe; line-height:1.5; }
+    main { padding:24px 0 40px; }
+    .grid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr); gap:20px; align-items:start; }
+    .card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:22px; box-shadow:0 5px 20px #0f172a0a; }
+    h2 { margin:0 0 18px; font-size:21px; }
+    .fields { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    label { display:block; font-size:13px; font-weight:700; margin-bottom:7px; color:#334155; }
+    input, select { width:100%; border:1px solid #cbd5e1; border-radius:9px; padding:11px 12px; font-size:15px; background:white; color:#172033; }
+    input:focus, select:focus { outline:2px solid #bfdbfe; border-color:var(--blue); }
+    .full { grid-column:1/-1; }
+    button { border:0; border-radius:10px; background:var(--blue); color:white; font-weight:700; font-size:15px; padding:13px 18px; cursor:pointer; }
+    button:hover { background:#1d4ed8; }
+    .submit { width:100%; margin-top:18px; }
+    .result { margin-bottom:18px; padding:16px; border-radius:12px; background:#eff6ff; border:1px solid #bfdbfe; }
+    .result h3 { margin:0 0 6px; }
+    .result p { margin:5px 0; }
+    .error { background:#fff1f2; border-color:#fecdd3; color:#9f1239; }
+    .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .stat { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; }
+    .stat strong { display:block; font-size:23px; margin-bottom:5px; }
+    .stat span { color:var(--muted); font-size:12px; }
+    .muted { color:var(--muted); font-size:13px; line-height:1.5; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th,td { padding:10px 8px; text-align:left; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+    th { color:#475569; background:#f8fafc; }
+    .wide { margin-top:20px; }
+    .retrain { margin-top:16px; background:#475569; }
+    .retrain:hover { background:#334155; }
+    footer { color:var(--muted); text-align:center; font-size:12px; padding:20px; }
+    @media(max-width:760px) { .grid { grid-template-columns:1fr; } .fields { grid-template-columns:1fr; } .full { grid-column:auto; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Titanic Survival Predictor</h1>
+    <p>Enter passenger details to estimate the probability of survival using a scikit-learn model.</p>
+  </div>
+</header>
+<main class="wrap">
+  <div class="grid">
+    <section class="card">
+      <h2>Passenger details</h2>
+      {% if error %}
+        <div class="result error"><strong>Could not make prediction</strong><p>{{ error }}</p></div>
+      {% endif %}
+      {% if prediction %}
+        <div class="result">
+          <h3>Prediction: {{ prediction }}</h3>
+          <p>Estimated survival probability: <strong>{{ "%.1f"|format(probability * 100) }}%</strong></p>
+          <p class="muted">This is a model estimate, not a certainty.</p>
+        </div>
+      {% endif %}
+      <form method="post" action="/">
+        <div class="fields">
+          <div class="full">
+            <label for="name">Passenger name (optional, helps infer title)</label>
+            <input id="name" name="name" type="text" placeholder="e.g. Braund, Mr. Owen Harris" value="{{ form_data.name }}">
+          </div>
+          <div>
+            <label for="pclass">Passenger class</label>
+            <select id="pclass" name="pclass" required>
+              <option value="1" {% if form_data.pclass == "1" %}selected{% endif %}>1st class</option>
+              <option value="2" {% if form_data.pclass == "2" %}selected{% endif %}>2nd class</option>
+              <option value="3" {% if form_data.pclass == "3" %}selected{% endif %}>3rd class</option>
+            </select>
+          </div>
+          <div>
+            <label for="sex">Sex</label>
+            <select id="sex" name="sex" required>
+              <option value="female" {% if form_data.sex == "female" %}selected{% endif %}>Female</option>
+              <option value="male" {% if form_data.sex == "male" %}selected{% endif %}>Male</option>
+            </select>
+          </div>
+          <div>
+            <label for="age">Age (leave blank if unknown)</label>
+            <input id="age" name="age" type="number" min="0" max="120" step="0.1" value="{{ form_data.age }}">
+          </div>
+          <div>
+            <label for="fare">Ticket fare</label>
+            <input id="fare" name="fare" type="number" min="0" step="0.01" value="{{ form_data.fare }}" required>
+          </div>
+          <div>
+            <label for="sibsp">Siblings / spouse aboard</label>
+            <input id="sibsp" name="sibsp" type="number" min="0" step="1" value="{{ form_data.sibsp }}" required>
+          </div>
+          <div>
+            <label for="parch">Parents / children aboard</label>
+            <input id="parch" name="parch" type="number" min="0" step="1" value="{{ form_data.parch }}" required>
+          </div>
+          <div class="full">
+            <label for="embarked">Port of embarkation</label>
+            <select id="embarked" name="embarked" required>
+              <option value="S" {% if form_data.embarked == "S" %}selected{% endif %}>Southampton (S)</option>
+              <option value="C" {% if form_data.embarked == "C" %}selected{% endif %}>Cherbourg (C)</option>
+              <option value="Q" {% if form_data.embarked == "Q" %}selected{% endif %}>Queenstown (Q)</option>
+            </select>
+          </div>
+        </div>
+        <button class="submit" type="submit">Predict survival</button>
+      </form>
+    </section>
+
+    <aside class="card">
+      <h2>Dataset overview</h2>
+      <div class="stats">
+        <div class="stat"><strong>{{ metrics.get("rows", 891) }}</strong><span>Training passengers</span></div>
+        <div class="stat"><strong>{{ "%.1f"|format(metrics.get("survival_rate", 0.384) * 100) }}%</strong><span>Survived in dataset</span></div>
+        <div class="stat"><strong>{{ metrics.get("best", "Random Forest") }}</strong><span>Selected model</span></div>
+        <div class="stat"><strong>{{ "%.2f"|format((metrics.get("models", []) | selectattr("name", "equalto", metrics.get("best", "Random Forest")) | map(attribute="cv") | first | default(0)) * 100) }}%</strong><span>Cross-validation accuracy</span></div>
+      </div>
+      <p class="muted">The model uses passenger class, sex, age, family counts, fare, embarkation port, and a title extracted from the name.</p>
+      <form method="post" action="/retrain" onsubmit="return confirm('Retrain all three models using train.csv?');">
+        <button class="retrain" type="submit">Retrain models</button>
+      </form>
+    </aside>
+  </div>
+
+  <section class="card wide">
+    <h2>Model comparison</h2>
+    {% if metrics.get("models") %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Model</th><th>CV accuracy</th><th>Test accuracy</th><th>Precision</th><th>Recall</th><th>F1 score</th></tr></thead>
+        <tbody>
+        {% for m in metrics.get("models", []) %}
+          <tr>
+            <td>{% if m.name == metrics.get("best") %}<strong>{{ m.name }} ★</strong>{% else %}{{ m.name }}{% endif %}</td>
+            <td>{{ "%.2f"|format(m.cv * 100) }}%</td>
+            <td>{{ "%.2f"|format(m.accuracy * 100) }}%</td>
+            <td>{{ "%.2f"|format(m.precision * 100) }}%</td>
+            <td>{{ "%.2f"|format(m.recall * 100) }}%</td>
+            <td>{{ "%.3f"|format(m.f1) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="muted">Metrics will appear after the model has been trained.</p>
+    {% endif %}
+  </section>
+</main>
+<footer>Titanic Survival Predictor · Educational machine-learning project</footer>
+</body>
+</html>

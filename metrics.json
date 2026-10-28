@@ -1,0 +1,70 @@
+{
+  "best": "Random Forest",
+  "models": [
+    {
+      "name": "Logistic Regression",
+      "cv": 0.8216,
+      "accuracy": 0.8547,
+      "precision": 0.8413,
+      "recall": 0.7681,
+      "f1": 0.803,
+      "cm": [
+        [
+          100,
+          10
+        ],
+        [
+          16,
+          53
+        ]
+      ]
+    },
+    {
+      "name": "Random Forest",
+      "cv": 0.8217,
+      "accuracy": 0.8324,
+      "precision": 0.8305,
+      "recall": 0.7101,
+      "f1": 0.7656,
+      "cm": [
+        [
+          100,
+          10
+        ],
+        [
+          20,
+          49
+        ]
+      ]
+    },
+    {
+      "name": "Gradient Boosting",
+      "cv": 0.8132,
+      "accuracy": 0.8268,
+      "precision": 0.8167,
+      "recall": 0.7101,
+      "f1": 0.7597,
+      "cm": [
+        [
+          99,
+          11
+        ],
+        [
+          20,
+          49
+        ]
+      ]
+    }
+  ],
+  "rows": 891,
+  "survival_rate": 0.384,
+  "by_sex": {
+    "female": 0.742,
+    "male": 0.189
+  },
+  "by_class": {
+    "1": 0.63,
+    "2": 0.473,
+    "3": 0.242
+  }
+}
