@@ -22,3 +22,23 @@ Open http://127.0.0.1:5000 in your browser. Keep the terminal open while using t
 If `model.pkl` is missing, `model.py` will train a model from `train.csv` when the app starts. To retrain all models manually, run `python model.py`.
 
 The app expects the same feature pipeline as `model.py`: Pclass, Age, SibSp, Parch, Fare, FamilySize, IsAlone, Sex, Embarked and Title. Passenger title is extracted from the name.
+
+
+# Titanic Survival Predictor
+
+## Project Structure
+
+```text
+Titanic-Survival-Predictor/
+│
+├── app.py                  # Flask web application and prediction route
+├── model.py                # Feature engineering, training and prediction
+├── model.pkl               # Trained scikit-learn pipeline
+├── train.csv               # Kaggle Titanic training dataset
+├── metrics.json            # Model evaluation metrics and results
+├── requirements.txt        # Python dependencies
+├── README.md               # Project documentation
+│
+└── templates/
+    └── index.html          # Web interface and model metrics display
+```
